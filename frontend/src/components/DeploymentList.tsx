@@ -1,7 +1,7 @@
-import {useEffect, useState, useCallback, useRef} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 
-import {FixedSizeList as List} from "react-window";
 import type {ListOnScrollProps} from "react-window"; // solo tipo, no valor en runtime
+import {FixedSizeList as List} from "react-window";
 import {Deployment} from "../types";
 import DeploymentItem from "./DeploymentItem";
 import Modal from "react-modal";
@@ -135,11 +135,11 @@ export default function DeploymentList() {
                         closeModal();
                     }}
                     onUpdated={(updatedDeployment) => {
-                          setDeployments((prevDeployments) =>
+                        setDeployments((prevDeployments) =>
                             prevDeployments.map((deployment) =>
-                              deployment.id === updatedDeployment.id ? updatedDeployment : deployment
+                                deployment.id === updatedDeployment.id ? updatedDeployment : deployment
                             )
-                          );
+                        );
                         closeModal();
                     }}></DeploymentForm>
             </Modal>
