@@ -1,13 +1,13 @@
-from rest_framework import serializers
-from .models import Deployment
-from django.db import models
-from .utils import get_deployments_pods
 from collections import defaultdict
 
+from django.db import models
+from rest_framework import serializers
+
+from .models import Deployment
+from .utils import get_deployments_pods
 
 
 class DeploymentListSerializer(serializers.ListSerializer):
-
     """To avoid n+1 call to kub api when serializing many instances"""
 
     def to_representation(self, data):
@@ -18,7 +18,7 @@ class DeploymentListSerializer(serializers.ListSerializer):
             iterable = data
         else:
             iterable = list(data)
-        self.context["pods_by_deployment"] =  defaultdict(list)
+        self.context["pods_by_deployment"] = defaultdict(list)
         for pod in get_deployments_pods(iterable):
             self.context["pods_by_deployment"][pod.metadata.labels["app"]].append(pod)
 
@@ -31,14 +31,16 @@ class DeploymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Deployment
-        fields = '__all__'
+        fields = "__all__"
         list_serializer_class = DeploymentListSerializer
 
-
     def get_pods(self, obj: Deployment):
-        pods_by_deployment = self.context.get('pods_by_deployment', {})
+        pods_by_deployment = self.context.get("pods_by_deployment", {})
         return [
-            pod.to_dict() for pod in
-            (pods_by_deployment[str(obj.pk)] if str(obj.pk) in pods_by_deployment else obj.pods)
+            pod.to_dict()
+            for pod in (
+                pods_by_deployment[str(obj.pk)]
+                if str(obj.pk) in pods_by_deployment
+                else obj.pods
+            )
         ]
-
