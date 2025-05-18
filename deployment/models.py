@@ -65,7 +65,6 @@ class Deployment(models.Model):
                 raise
 
     def update_k8s_deployment(self):
-        name = self.label
         body = {
             "spec": {
                 "replicas": self.replicas,
@@ -76,5 +75,5 @@ class Deployment(models.Model):
         }
 
         apps_v1.patch_namespaced_deployment(
-            name=name, namespace=settings.KUBE_NAMESPACE, body=body
+            name=str(self.pk), namespace=settings.KUBE_NAMESPACE, body=body
         )
