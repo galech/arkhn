@@ -12,6 +12,11 @@ class Deployment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     replicas = models.IntegerField(default=1)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['label', 'id']),
+        ]
+
     @property
     def pods(self):
         return get_deployment_pods(self)
@@ -39,28 +44,24 @@ class Deployment(models.Model):
 
 
     def delete_k8s_deployment(self):
+        try:
+            apps_v1.delete_namespaced_deployment(
+                name=str(self.pk),
+                namespace=settings.KUBE_NAMESPACE,
+                body=client.V1DeleteOptions(propagation_policy='Foreground')
+            )
+        except client.ApiException as e:
+            if e.status == 404:
+                pass
+            else:
+                raise
 
-        apps_v1.delete_namespaced_deployment(
-            name=str(self.pk),
-            namespace=settings.KUBE_NAMESPACE,
-            body=client.V1DeleteOptions(propagation_policy='Foreground')
-        )
-
-    def update_k8s_deployment(self, new_data):
+    def update_k8s_deployment(self):
         name = self.label
         body = {
             "spec": {
-                "replicas": new_data.get("replicas", self.replicas),
-                "template": {
-                    "spec": {
-                        "containers": [
-                            {
-                                "name": name,
-                                "image": new_data.get("image", self.image)
-                            }
-                        ]
-                    }
-                }
+                "replicas": self.replicas,
+                "template": {"spec": {"containers": [{"name": self.label, "image": self.image}]}}
             }
         }
 
